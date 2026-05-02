@@ -11,7 +11,7 @@
     <!-- ✅ Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
+@yield('scripts')
 <body class="bg-light">
 
     <!-- ✅ Navbar -->
@@ -47,6 +47,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ✅ هنا المهم -->
+    @stack('scripts')
 
 </body>
 

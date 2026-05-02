@@ -19,33 +19,31 @@ class DashboardController extends Controller
         $centerId = $request->center_id;
         $compareCenterId = $request->compare_center_id;
 
-        // 🎓 الطلاب
-        $studentsQuery = Student::query();
+        // =========================
+        // Students
+        // =========================
+        $students = Student::query()
+            ->when($centerId, fn($q) => $q->where('center_id', $centerId))
+            ->get();
 
-        if ($centerId) {
-            $studentsQuery->where('center_id', $centerId);
-        }
+        $totalStudents = $students->count();
 
-        $totalStudents = $studentsQuery->count();
+        // =========================
+        // Today Attendance
+        // =========================
+        $todayAttendance = Attendance::whereDate('date', $today)
+            ->when($centerId, function ($q) use ($centerId) {
+                $q->whereHas('student', fn($s) => $s->where('center_id', $centerId));
+            })
+            ->get();
 
-        // 📅 حضور اليوم
-        $attendanceQuery = Attendance::whereDate('date', $today);
+        $presentCount = $todayAttendance->count();
+        $checkedOutCount = $todayAttendance->whereNotNull('check_out')->count();
+        $absentCount = max($totalStudents - $presentCount, 0);
 
-        if ($centerId) {
-            $attendanceQuery->whereHas('student', function ($q) use ($centerId) {
-                $q->where('center_id', $centerId);
-            });
-        }
-
-        $attendanceToday = $attendanceQuery->get();
-
-        $presentCount = $attendanceToday->count();
-
-        $checkedOutCount = $attendanceToday->whereNotNull('check_out')->count();
-
-        $absentCount = $totalStudents - $presentCount;
-
-        // 📊 CHART DATA
+        // =========================
+        // Chart (Last 7 days)
+        // =========================
         $dates = [];
         $center1Data = [];
         $center2Data = [];
@@ -53,29 +51,17 @@ class DashboardController extends Controller
         $period = CarbonPeriod::create(now()->subDays(6), now());
 
         foreach ($period as $date) {
-
             $dates[] = $date->format('d M');
 
-            // 🟢 Center 1
-            $q1 = Attendance::whereDate('date', $date);
+            $center1Data[] = Attendance::whereDate('date', $date)
+                ->when($centerId, fn($q) => $q->whereHas('student', fn($s) => $s->where('center_id', $centerId)))
+                ->count();
 
-            if ($centerId) {
-                $q1->whereHas('student', function ($q) use ($centerId) {
-                    $q->where('center_id', $centerId);
-                });
-            }
-
-            $center1Data[] = $q1->count();
-
-            // 🔵 Center 2 (Comparison)
-            if ($compareCenterId) {
-                $q2 = Attendance::whereDate('date', $date)
-                    ->whereHas('student', function ($q) use ($compareCenterId) {
-                        $q->where('center_id', $compareCenterId);
-                    });
-
-                $center2Data[] = $q2->count();
-            }
+            $center2Data[] = $compareCenterId
+                ? Attendance::whereDate('date', $date)
+                    ->whereHas('student', fn($s) => $s->where('center_id', $compareCenterId))
+                    ->count()
+                : 0;
         }
 
         return view('dashboard', compact(
@@ -87,7 +73,9 @@ class DashboardController extends Controller
             'absentCount',
             'dates',
             'center1Data',
-            'center2Data'
+            'center2Data',
+            'centerId',
+            'compareCenterId'
         ));
     }
 }

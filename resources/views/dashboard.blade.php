@@ -1,141 +1,135 @@
+
 @extends('layouts.app')
 
+@section('title', 'Dashboard')
+
 @section('content')
+    <div class="container">
 
-    <form method="GET" class="mb-4">
+        {{-- Filters --}}
+        <form method="GET" class="row g-2 mb-4">
 
-        {{-- السنتر الأساسي --}}
-        <select name="center_id" onchange="this.form.submit()" class="form-control w-25">
-            <option value="">اختر المركز</option>
+            <div class="col-md-4">
+                <select name="center_id" class="form-control">
+                    <option value="">🏫 كل المراكز</option>
+                    @foreach($centers as $center)
+                        <option value="{{ $center->id }}" {{ request('center_id') == $center->id ? 'selected' : '' }}>
+                            {{ $center->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-            @foreach($centers as $center)
-                <option value="{{ $center->id }}" {{ request('center_id') == $center->id ? 'selected' : '' }}>
-                    {{ $center->name }}
-                </option>
-            @endforeach
-        </select>
+            <div class="col-md-4">
+                <select name="compare_center_id" class="form-control">
+                    <option value="">📊 مقارنة</option>
+                    @foreach($centers as $center)
+                        <option value="{{ $center->id }}" {{ request('compare_center_id') == $center->id ? 'selected' : '' }}>
+                            {{ $center->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-        {{-- سنتر المقارنة --}}
-        <select name="compare_center_id" onchange="this.form.submit()" class="form-control w-25 mt-2">
-            <option value="">اختر سنتر للمقارنة</option>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100">عرض</button>
+            </div>
 
-            @foreach($centers as $center)
-                <option value="{{ $center->id }}" {{ request('compare_center_id') == $center->id ? 'selected' : '' }}>
-                    {{ $center->name }}
-                </option>
-            @endforeach
-        </select>
+        </form>
 
-    </form>
+        {{-- Cards --}}
+        <div class="row mb-4">
 
-    <h2 class="mb-4">📊 Dashboard – {{ $today->format('d M Y') }}</h2>
-
-    <div class="row g-3">
-
-        <div class="col-md-3">
-            <div class="card bg-dark text-white mb-3">
-                <div class="card-body text-center">
-                    <h5>🎓 عدد الطلاب</h5>
-                    <h2>{{ $totalStudents }}</h2>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h6>الطلاب</h6>
+                        <h3>{{ $totalStudents }}</h3>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card bg-success text-white mb-3">
-                <div class="card-body text-center">
-                    <h5>✅ الحاضرين</h5>
-                    <h2>{{ $presentCount }}</h2>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h6>حضور</h6>
+                        <h3 class="text-success">{{ $presentCount }}</h3>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card bg-primary text-white mb-3">
-                <div class="card-body text-center">
-                    <h5>🚪 المنصرفين</h5>
-                    <h2>{{ $checkedOutCount }}</h2>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h6>انصراف</h6>
+                        <h3 class="text-primary">{{ $checkedOutCount }}</h3>
+                    </div>
                 </div>
             </div>
+
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h6>غياب</h6>
+                        <h3 class="text-danger">{{ $absentCount }}</h3>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="col-md-3">
-            <div class="card bg-danger text-white mb-3">
-                <div class="card-body text-center">
-                    <h5>❌ الغياب</h5>
-                    <h2>{{ $absentCount }}</h2>
+        {{-- Chart --}}
+        <div class="card">
+            <div class="card-body">
+                <h5>📈 آخر 7 أيام</h5>
+                <div style="height:300px">
+                    <canvas id="attendanceChart"></canvas>
                 </div>
             </div>
         </div>
 
     </div>
+@endsection
 
-    {{-- CHART --}}
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5>📈 الحضور آخر 7 أيام</h5>
-
-            <div style="height: 300px;">
-                <canvas id="attendanceChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    </div>
-
-    {{-- Chart.js --}}
+{{-- مهم جدًا --}}
+@section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            const labels = {!! json_encode($dates) !!};
-            const center1 = {!! json_encode($center1Data) !!};
-            const center2 = {!! json_encode($center2Data ?? []) !!};
+            const labels = @json($dates);
+            const data1 = @json($center1Data);
+            const data2 = @json($center2Data ?? []);
 
             const ctx = document.getElementById('attendanceChart');
 
+            if (!ctx) return;
+
             new Chart(ctx, {
-                type: 'bar', // 🔥 Bar Chart احترافي
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'السنتر الأساسي',
-                            data: center1,
-                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
-                            borderRadius: 6
+                            label: 'المركز الأساسي',
+                            data: data1,
+                            backgroundColor: 'rgba(40,167,69,0.7)'
                         },
                         {
-                            label: 'سنتر المقارنة',
-                            data: center2,
-                            backgroundColor: 'rgba(0, 123, 255, 0.7)',
-                            borderRadius: 6
+                            label: 'المقارنة',
+                            data: data2,
+                            backgroundColor: 'rgba(13,110,253,0.7)'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-
-                    animation: {
-                        duration: 1200,
-                        easing: 'easeOutQuart'
-                    },
-
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0
-                            }
-                        }
-                    },
-
-                    plugins: {
-                        legend: {
-                            display: true
+                            ticks: { precision: 0 }
                         }
                     }
                 }
@@ -143,5 +137,4 @@
 
         });
     </script>
-
 @endsection
