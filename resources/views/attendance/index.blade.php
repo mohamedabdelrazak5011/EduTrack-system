@@ -3,39 +3,63 @@
 @section('title', 'متابعة الحضور')
 
 @section('content')
+
 <div class="container">
 
-    {{-- العنوان --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">
-            📊 متابعة الحضور – {{ $date->format('Y-m-d') }}
-        </h4>
+    {{-- ========================= --}}
+    {{-- 🔍 FILTER SECTION --}}
+    {{-- ========================= --}}
+    <form method="GET" action="{{ route('attendance.index') }}" class="row g-2 mb-3">
 
-        <a href="{{ route('attendance.export') }}" class="btn btn-success">
-            📥 تحميل Excel
-        </a>
-    </div>
-
-    {{-- اختيار اليوم --}}
-    <form method="GET" action="{{ route('attendance.index') }}" class="mb-4">
-        <div class="row align-items-end">
-            <div class="col-md-3">
-                <label class="form-label">📅 اختر اليوم</label>
-                <input
-                    type="date"
-                    name="date"
-                    class="form-control"
-                    value="{{ $date->format('Y-m-d') }}"
-                    onchange="this.form.submit()"
-                >
-            </div>
+        <div class="col-md-3">
+            <label>📅 يوم محدد</label>
+            <input type="date" name="date" class="form-control"
+                   value="{{ request('date') }}">
         </div>
+
+        <div class="col-md-3">
+            <label>📍 من</label>
+            <input type="date" name="from" class="form-control"
+                   value="{{ request('from') }}">
+        </div>
+
+        <div class="col-md-3">
+            <label>📍 إلى</label>
+            <input type="date" name="to" class="form-control"
+                   value="{{ request('to') }}">
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary w-100">فلترة</button>
+        </div>
+
     </form>
 
-    {{-- ✅ Chart ملخص اليوم --}}
+    {{-- ========================= --}}
+    {{-- HEADER + EXPORT --}}
+    {{-- ========================= --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h4>
+            📊 متابعة الحضور
+            <small class="text-muted">
+                ({{ $date->format('Y-m-d') }})
+            </small>
+        </h4>
+
+        <a href="{{ route('attendance.export', request()->all()) }}"
+           class="btn btn-success">
+            📥 تحميل Excel
+        </a>
+
+    </div>
+
+    {{-- ========================= --}}
+    {{-- CHART --}}
+    {{-- ========================= --}}
     <div class="card mb-4">
         <div class="card-body text-center">
-            <h6 class="mb-3">📈 ملخص اليوم</h6>
+            <h6>📈 ملخص الحضور</h6>
 
             <div style="max-width:300px;margin:auto">
                 <canvas id="attendanceChart"></canvas>
@@ -43,22 +67,28 @@
         </div>
     </div>
 
-    {{-- جدول الحضور --}}
+    {{-- ========================= --}}
+    {{-- TABLE --}}
+    {{-- ========================= --}}
     <table class="table table-bordered text-center align-middle">
+
         <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>اسم الطالب</th>
                 <th>الحالة</th>
-                <th>وقت الحضور</th>
-                <th>وقت الانصراف</th>
+                <th>الحضور</th>
+                <th>الانصراف</th>
             </tr>
         </thead>
+
         <tbody>
         @foreach ($students as $student)
+
             @php
                 $record = $attendance[$student->id] ?? null;
             @endphp
+
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $student->name }}</td>
@@ -78,12 +108,16 @@
                 <td>{{ $record?->check_in?->format('h:i A') ?? '-' }}</td>
                 <td>{{ $record?->check_out?->format('h:i A') ?? '-' }}</td>
             </tr>
+
         @endforeach
         </tbody>
+
     </table>
 
 </div>
+
 @endsection
+
 
 @push('scripts')
 <script>
@@ -97,8 +131,11 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: ['حضور', 'غياب'],
             datasets: [{
-                data: [{{ $presentCount }}, {{ $absentCount }}],
-                backgroundColor: ['#198754', '#dc3545'],
+                data: [
+                    {{ $presentCount }},
+                    {{ $absentCount }}
+                ],
+                backgroundColor: ['#198754', '#dc3545']
             }]
         },
         options: {
@@ -108,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cutout: '65%'
         }
     });
+
 });
 </script>
 @endpush

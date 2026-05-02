@@ -5,42 +5,69 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use App\Exports\AttendanceExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
     /**
-     * 📊 عرض الحضور مع اختيار يوم
+     * 📊 عرض الحضور (يوم + فترة)
      */
     public function index(Request $request)
     {
-        $date = $request->get('date')
-            ? Carbon::parse($request->get('date'))
-            : Carbon::today();
+        $date = $request->date ? Carbon::parse($request->date) : Carbon::today();
+
+        $from = $request->from;
+        $to = $request->to;
 
         $students = Student::all();
 
-        $attendance = Attendance::whereDate('date', $date->format('Y-m-d'))
-            ->get()
-            ->keyBy('student_id');
+        $query = Attendance::query();
 
-        $presentCount = $attendance->count();
+        // 🟡 فلترة يوم
+        if ($request->date) {
+            $query->whereDate('date', $date);
+        }
+
+        // 🟡 فلترة فترة
+        if ($from && $to) {
+            $query->whereBetween('date', [$from, $to]);
+        }
+
+        $attendance = $query->get()->keyBy('student_id');
+
+        $presentCount = $attendance->whereNotNull('check_in')->count();
         $absentCount = $students->count() - $presentCount;
 
         return view('attendance.index', compact(
             'students',
             'attendance',
             'date',
+            'from',
+            'to',
             'presentCount',
             'absentCount'
         ));
     }
 
     /**
-     * 📟 صفحة الاسكان
+     * 📥 Export Excel (يوم أو فترة)
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new AttendanceExport(
+                $request->from,
+                $request->to,
+                $request->date
+            ),
+            'attendance.xlsx'
+        );
+    }
+
+    /**
+     * 📟 Scan page
      */
     public function scan()
     {
@@ -55,19 +82,13 @@ class AttendanceController extends Controller
         $code = trim($request->code);
 
         if (!$code) {
-            return response()->json([
-                'message' => '❌ كود غير صحيح',
-                'type' => 'error'
-            ]);
+            return response()->json(['message' => '❌ كود غير صحيح', 'type' => 'error']);
         }
 
         $student = Student::where('student_code', $code)->first();
 
         if (!$student) {
-            return response()->json([
-                'message' => '❌ الطالب غير موجود',
-                'type' => 'error'
-            ]);
+            return response()->json(['message' => '❌ الطالب غير موجود', 'type' => 'error']);
         }
 
         $today = Carbon::today()->toDateString();
@@ -76,9 +97,8 @@ class AttendanceController extends Controller
             ->whereDate('date', $today)
             ->first();
 
-        // 🟢 Check-in
+        // Check-in
         if (!$attendance) {
-
             Attendance::create([
                 'student_id' => $student->id,
                 'date' => $today,
@@ -88,18 +108,12 @@ class AttendanceController extends Controller
             return response()->json([
                 'message' => '✅ تم تسجيل الحضور',
                 'type' => 'checkin',
-
-                // ⭐ مهم جدًا للـ popup
-                'student' => [
-                    'name' => $student->name,
-                    'photo' => $student->photo
-                ]
+                'student' => $student
             ]);
         }
 
-        // 🟡 Check-out
+        // Check-out
         if (!$attendance->check_out) {
-
             $attendance->update([
                 'check_out' => now(),
             ]);
@@ -107,24 +121,14 @@ class AttendanceController extends Controller
             return response()->json([
                 'message' => '✅ تم تسجيل الانصراف',
                 'type' => 'checkout',
-
-                // ⭐ مهم جدًا للـ popup
-                'student' => [
-                    'name' => $student->name,
-                    'photo' => $student->photo
-                ]
+                'student' => $student
             ]);
         }
 
-        // 🔵 Done
         return response()->json([
-            'message' => 'ℹ️ تم تسجيل الحضور والانصراف بالفعل اليوم',
+            'message' => 'ℹ️ تم تسجيل اليوم بالفعل',
             'type' => 'done',
-
-            'student' => [
-                'name' => $student->name,
-                'photo' => $student->photo
-            ]
+            'student' => $student
         ]);
     }
 }

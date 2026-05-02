@@ -9,11 +9,32 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AttendanceExport implements FromCollection, WithHeadings, WithMapping
 {
+    protected $from;
+    protected $to;
+    protected $date;
+
+    public function __construct($from = null, $to = null, $date = null)
+    {
+        $this->from = $from;
+        $this->to = $to;
+        $this->date = $date;
+    }
+
     public function collection()
     {
-        return Attendance::with('student')
-            ->whereDate('date', now()->toDateString())
-            ->get();
+        $query = Attendance::with('student');
+
+        // 📅 يوم محدد
+        if ($this->date) {
+            $query->whereDate('date', $this->date);
+        }
+
+        // 📆 فترة
+        if ($this->from && $this->to) {
+            $query->whereBetween('date', [$this->from, $this->to]);
+        }
+
+        return $query->get();
     }
 
     public function headings(): array
@@ -22,21 +43,21 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping
             'اسم الطالب',
             'كود الطالب',
             'الحالة',
-            'وقت الحضور',
-            'وقت الانصراف',
+            'الحضور',
+            'الانصراف',
             'التاريخ',
         ];
     }
 
-    public function map($attendance): array
+    public function map($a): array
     {
         return [
-            $attendance->student->name,
-            $attendance->student->student_code,
-            $attendance->check_out ? 'انصراف' : 'حضور',
-            optional($attendance->check_in)->format('H:i'),
-            optional($attendance->check_out)->format('H:i'),
-            $attendance->date->format('Y-m-d'),
+            $a->student->name ?? '',
+            $a->student->student_code ?? '',
+            $a->check_out ? 'انصرف' : 'حضور',
+            $a->check_in ?? '-',
+            $a->check_out ?? '-',
+            $a->date,
         ];
     }
 }
