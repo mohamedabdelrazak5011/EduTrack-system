@@ -3,9 +3,11 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
-
     "require": {
         "php": "^8.2",
         "ext-gd": "*",
@@ -16,7 +18,6 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1"
     },
-
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
@@ -26,7 +27,6 @@
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.50"
     },
-
     "autoload": {
         "psr-4": {
             "App\\": "app/",
@@ -34,13 +34,11 @@
             "Database\\Seeders\\": "database/seeders/"
         }
     },
-
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
         }
     },
-
     "scripts": {
         "setup": [
             "composer install",
@@ -51,13 +49,11 @@
             "npm run build"
         ]
     },
-
     "extra": {
         "laravel": {
             "dont-discover": []
         }
     },
-
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
@@ -67,7 +63,6 @@
             "php-http/discovery": true
         }
     },
-
     "minimum-stability": "stable",
     "prefer-stable": true
 }
