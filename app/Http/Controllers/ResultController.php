@@ -38,7 +38,8 @@ class ResultController extends Controller
         ]);
 
         return redirect()
-            ->route('students.profile', $request->student_id)
+            ->route('students.show', $request->student_id)
+
             ->with('success', '✅ تم إضافة الدرجة بنجاح');
     }
 

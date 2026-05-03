@@ -42,9 +42,11 @@
                         💾 حفظ
                     </button>
 
-                    <a href="{{ route('students.profile', $student->id) }}" class="btn btn-secondary">
+                    <a href="{{ route('students.show', $student->id) }}" class="btn btn-secondary">
                         رجوع
                     </a>
+                    
+                  
 
                 </form>
 

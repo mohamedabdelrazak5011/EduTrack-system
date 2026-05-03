@@ -22,11 +22,10 @@
                 <div class="row align-items-center">
 
                     {{-- الصورة --}}
-                    <div class="col-md-3 text-center">
-                        <img src="{{ $student->photo
-        ? asset('uploads/students/' . $student->photo)
-        : asset('images/default-student.png') }}" class="rounded-circle shadow" width="140" height="140"
-                            style="object-fit: cover;">
+                    <div {{ $student->photo
+        ? asset(photo)
+        : asset('images/default-student.png') }}"
+                        class="rounded-circle shadow" width="140" height="140" style="object-fit: cover;">
 
                         <div class="mt-3">
                             <span class="badge bg-success">
@@ -37,7 +36,6 @@
 
                     {{-- البيانات --}}
                     <div class="col-md-9">
-
                         <div class="row">
 
                             <div class="col-md-6 mb-3">
@@ -70,86 +68,81 @@
                                 </div>
                             </div>
 
-                        </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <strong>📅 تاريخ الإضافة:</strong>
+                                    {{ $student->created_at->format('Y-m-d') }}
+                                </div>
+                            </div>
 
+                        </div>
                     </div>
 
                 </div>
-
             </div>
         </div>
 
         {{-- Results Card --}}
         <div class="card shadow mt-4 border-0">
 
-            <div class="card-header bg-dark text-white">
-                📊 الدرجات
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>📊 الدرجات</span>
+
+                <a href="{{ route('results.create', $student->id) }}" class="btn btn-success btn-sm">
+                    ➕ إضافة درجة
+                </a>
             </div>
 
             <div class="card-body">
 
-                <a href="{{ route('results.create', $student->id) }}" class="btn btn-success mb-3">
-                    ➕ إضافة درجة
-                </a>
+                @if ($student->results->count())
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>المادة</th>
+                                    <th>الدرجة</th>
+                                    <th>من</th>
+                                    <th>الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($student->results as $result)
+                                    <tr>
+                                        <td>{{ $result->subject }}</td>
+                                        <td>{{ $result->score }}</td>
+                                        <td>{{ $result->max_score }}</td>
+                                        <td>
 
-                @if($student->results && $student->results->count() > 0)
-                    <div class="mb-3">
-                        <span class="badge bg-primary">
-                            📊 عدد المواد: {{ $student->results->count() }}
-                        </span>
+                                            <form method="POST" action="{{ route('results.destroy', $result->id) }}"
+                                                onsubmit="return confirmDelete(this);">
+                                                @csrf
+                                                @method('DELETE')
 
+                                                <input type="hidden" name="password">
+
+                                                <button class="btn btn-sm btn-danger">
+                                                    حذف
+                                                </button>
+                                            </form>
+
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3">
                         <span class="badge bg-success">
                             📈 متوسط الدرجات:
-                            {{ $student->results->avg('score') ? round($student->results->avg('score'), 2) : 0 }}
+                            {{ round($student->results->avg('score'), 2) }}
                         </span>
                     </div>
-                    <table class="table table-striped text-center">
-
-                        <thead class="table-dark">
-                            <tr>
-                                <th>المادة</th>
-                                <th>الدرجة</th>
-                                <th>النهائي</th>
-                                <th>النسبة</th>
-                                <th>التاريخ</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            @foreach($student->results as $result)
-
-                                <tr>
-                                    <td>{{ $result->subject }}</td>
-
-                                    <td>
-                                        <span class="badge bg-info text-dark">
-                                            {{ $result->score }}
-                                        </span>
-                                    </td>
-
-                                    <td>{{ $result->max_score ?? 100 }}</td>
-
-                                    <td>
-                                        <span class="badge bg-success">
-                                            {{ $result->percentage }}%
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        {{ $result->created_at->format('Y-m-d') }}
-                                    </td>
-                                </tr>
-
-                            @endforeach
-
-                        </tbody>
-
-                    </table>
 
                 @else
-                    <div class="alert alert-warning text-center">
-                        لا توجد درجات مسجلة حالياً
+                    <div class="alert alert-info text-center">
+                        لا توجد درجات مسجلة لهذا الطالب
                     </div>
                 @endif
 
@@ -159,3 +152,18 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        function confirmDeleteResult(form) {
+            const password = prompt("❗ أدخل الباسورد لحذف الدرجة:");
+
+            if (!password) {
+                return false;
+            }
+
+            form.querySelector('input[name="password"]').value = password;
+            return true;
+        }
+    </script>
+@endpush

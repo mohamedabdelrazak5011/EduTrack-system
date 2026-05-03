@@ -15,7 +15,8 @@ Route::resource('students', StudentController::class);
 
 // Extra student routes
 Route::get('/students/{student}/qr', [StudentController::class, 'qr'])->name('students.qr');
-Route::get('/students/{student}/profile', [StudentController::class, 'profile'])->name('students.profile');
+
+Route::resource('students', StudentController::class);
 Route::get('/students/{student}/records', [AttendanceController::class, 'studentRecords'])->name('students.records');
 
 // Attendance
@@ -40,3 +41,4 @@ Route::post('/results/store', [ResultController::class, 'store'])
 
 Route::delete('/results/{id}', [ResultController::class, 'destroy'])
     ->name('results.destroy');
+Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');

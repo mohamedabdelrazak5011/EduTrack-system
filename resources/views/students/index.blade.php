@@ -4,116 +4,142 @@
 
 @section('content')
 
-    <div class="container">
+    {{-- ===== FILTER & ACTIONS ===== --}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-center">
 
-        {{-- زر إضافة طالب --}}
-        <a href="{{ route('students.create') }}" class="btn btn-primary mb-3">
-            ➕ إضافة طالب
-        </a>
+                <div class="col-md-6">
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control"
+                        placeholder="🔍 ابحث باسم الطالب / الكود / رقم الموبايل">
+                </div>
 
-        {{-- قائمة الطلاب --}}
-        @foreach ($students as $student)
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100">
+                        بحث
+                    </button>
+                </div>
 
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="col-md-3 text-end">
+                    <a href="{{ route('students.create') }}" class="btn btn-success w-100">
+                        ➕ إضافة طالب
+                    </a>
+                </div>
 
-                    {{-- الصورة + البيانات --}}
-                    <div class="d-flex align-items-center gap-4">
+            </form>
+        </div>
+    </div>
 
-                        {{-- صورة الطالب --}}
-                        <img src="{{ $student->photo
-                ? asset('uploads/students/' . $student->photo)
-                : asset('images/default-student.png') }}" width="80" height="80" class="rounded-circle border"
-                            style="object-fit: cover;">
+    {{-- SUCCESS MESSAGE --}}
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
 
-                        <div>
+    {{-- ===== EXCEL IMPORT ===== --}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ route('students.import') }}" method="POST" enctype="multipart/form-data"
+                class="d-flex gap-3 align-items-center">
+                @csrf
 
-                            {{-- الاسم --}}
+                <input type="file" name="file" required class="form-control">
+
+                <button type="submit" class="btn btn-primary">
+                    📤 رفع ملف Excel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ===== STUDENTS CARDS ===== --}}
+    <div class="row g-4">
+
+        @forelse($students as $student)
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+
+                    {{-- Card Body --}}
+                    <div class="card-body d-flex gap-3">
+
+                        {{-- Avatar --}}
+                        <img src="{{ $student->avatar ?? asset('images/default-avatar.png') }}" class="rounded-circle"
+                            width="70" height="70" alt="avatar">
+
+                        {{-- Info --}}
+                        <div class="flex-grow-1">
+
                             <h5 class="mb-1">{{ $student->name }}</h5>
 
-                            {{-- كود الطالب --}}
                             <span class="badge bg-secondary mb-2">
-                                {{ $student->student_code }}
+                                {{ $student->code }}
                             </span>
 
-                            {{-- بيانات إضافية --}}
-                            <div class="text-muted small mt-2">
-
-                                <div>📞 {{ $student->parent_phone ?? '—' }}</div>
-
-                                <div>📧 {{ $student->email ?? '—' }}</div>
-
-                                {{-- المرحلة / الصف --}}
-                                <div>🏫 {{ $student->class ?? 'غير محدد' }}</div>
-
-                                {{-- المركز --}}
-                                <div>🏢 {{ $student->center->name ?? 'بدون مركز' }}</div>
-
+                            <div class="text-muted small">
+                                📞 {{ $student->phone ?? 'غير مسجل' }} <br>
+                                🏫 {{ $student->center->name ?? 'غير محدد' }} <br>
+                                📘 {{ $student->grade ?? 'غير محدد' }}
                             </div>
 
                         </div>
-
                     </div>
 
-                    {{-- الأزرار --}}
-                    <div class="d-flex gap-2">
+                    {{-- Actions --}}
+                    <div class="card-footer bg-light d-flex gap-2 justify-content-between">
 
-                        <a href="{{ route('students.profile', $student->id) }}" class="btn btn-outline-primary btn-sm">
-                            📂 الملف
+                        <a href="{{ route('students.show', $student) }}" class="btn btn-sm btn-outline-primary">
+                            الملف
                         </a>
 
-                        <a href="{{ route('students.qr', $student->id) }}" class="btn btn-outline-warning btn-sm">
-                            🔳 QR
+                        <a href="{{ route('students.edit', $student) }}" class="btn btn-sm btn-outline-warning">
+                            تعديل
                         </a>
 
-                        <a href="{{ route('students.edit', $student->id) }}" class="btn btn-outline-secondary btn-sm">
-                            ✏️ تعديل
+                        <a href="{{ route('students.qr', $student) }}" class="btn btn-sm btn-outline-info">
+                            QR
                         </a>
 
-                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#deleteModal{{ $student->id }}">
-                            حذف
-                        </button>
+                        <form method="POST" action="{{ route('students.destroy', $student->id) }}"
+                            onsubmit="return confirmDelete(this);">
+                            @csrf
+                            @method('DELETE')
+
+                            <input type="hidden" name="password">
+
+                            <button class="btn btn-sm btn-danger">
+                                حذف
+                            </button>
+                        </form>
 
                     </div>
 
                 </div>
             </div>
 
-            {{-- Modal الحذف (لازم يكون داخل الـ loop لكن خارج card) --}}
-            <div class="modal fade" id="deleteModal{{ $student->id }}" tabindex="-1">
-                <div class="modal-dialog">
-
-                    <form method="POST" action="{{ route('students.destroy', $student->id) }}">
-                        @csrf
-                        @method('DELETE')
-
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-                                <h5 class="modal-title">تأكيد الحذف</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                <p>أدخل كلمة المرور لتأكيد الحذف:</p>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-danger">حذف</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            </div>
-
-                        </div>
-
-                    </form>
-
+        @empty
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    لا يوجد طلاب مطابقين لبحثك
                 </div>
             </div>
-
-        @endforeach
+        @endforelse
 
     </div>
 
 @endsection
+@push('scripts')
+    <script>
+        function confirmDelete(form) {
+            const password = prompt("❗ أدخل الباسورد لحذف الطالب:");
+
+            if (!password) {
+                return false; // المستخدم لغى
+            }
+
+            form.querySelector('input[name="password"]').value = password;
+            return true; // يكمل الفورم
+        }
+    </script>
+@endpush

@@ -15,17 +15,15 @@ use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeMode;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class StudentController extends Controller
 {
     /* ======================================================
        عرض كل الطلاب
     ====================================================== */
-    public function index()
-    {
-        $students = Student::with('center')->latest()->get();
-        return view('students.index', compact('students'));
-    }
+
 
 
 
@@ -76,6 +74,21 @@ class StudentController extends Controller
 
         return redirect()->route('students.index')
             ->with('success', '✅ تم إضافة الطالب بنجاح');
+
+    }
+    public function index(Request $request)
+    {
+        $students = Student::with('center')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('student_code', 'like', '%' . $request->search . '%')
+                    ->orWhere('phone', 'like', '%' . $request->search . '%')
+                    ->orWhere('parent_phone', 'like', '%' . $request->search . '%');
+            })
+            ->latest()
+            ->get();
+
+        return view('students.index', compact('students'));
     }
     public function create()
     {
@@ -83,11 +96,12 @@ class StudentController extends Controller
 
         return view('students.create', compact('centers'));
     }
-    public function profile($id)
+    public function show($id)
     {
         $student = Student::with('center')->findOrFail($id);
 
         return view('students.profile', compact('student'));
+
     }
     public function edit($id)
     {

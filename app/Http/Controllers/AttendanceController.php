@@ -22,23 +22,26 @@ class AttendanceController extends Controller
         $to = $request->to;
 
         $students = Student::all();
+        $attendanceQuery = Attendance::query();
 
-        $query = Attendance::query();
-
-        // 🟡 فلترة يوم
         if ($request->date) {
-            $query->whereDate('date', $date);
+            $attendanceQuery->whereDate('date', $date);
         }
 
-        // 🟡 فلترة فترة
         if ($from && $to) {
-            $query->whereBetween('date', [$from, $to]);
+            $attendanceQuery->whereBetween('date', [$from, $to]);
         }
 
-        $attendance = $query->get()->keyBy('student_id');
+        $attendance = $attendanceQuery->get()->keyBy('student_id');
 
+        $totalStudents = $students->count();
         $presentCount = $attendance->whereNotNull('check_in')->count();
-        $absentCount = $students->count() - $presentCount;
+        $absentCount = $totalStudents - $presentCount;
+
+        // 🟢 بيانات الشارت (dummy لو مفيش)
+        $dates = [];
+        $center1Data = [];
+        $center2Data = [];
 
         return view('attendance.index', compact(
             'students',
@@ -47,13 +50,13 @@ class AttendanceController extends Controller
             'from',
             'to',
             'presentCount',
-            'absentCount'
+            'absentCount',
+            'totalStudents',
+            'dates',
+            'center1Data',
+            'center2Data'
         ));
     }
-
-    /**
-     * 📥 Export Excel (يوم أو فترة)
-     */
     public function export(Request $request)
     {
         return Excel::download(
