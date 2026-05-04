@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+/* ================= SOURCE FILES ================= */
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* ================= THEME VARIABLES ================= */
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-primary: #6366f1;
+    --color-success: #22c55e;
+    --color-danger: #ef4444;
+    --color-warning: #f59e0b;
+
+    --bg: #f5f6fa;
+    --radius: 16px;
+}
+
+/* ================= BASE ================= */
+@layer base {
+    body {
+        background: var(--bg);
+        font-family: var(--font-sans);
+    }
+}
+
+/* ================= COMPONENTS ================= */
+@layer components {
+
+    .card {
+        @apply bg-white rounded-xl shadow-sm p-4 transition hover:shadow-md;
+    }
+
+    .btn-primary {
+        @apply bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700;
+    }
+
+    .btn-success {
+        @apply bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600;
+    }
+
+    .input {
+        @apply border rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400;
+    }
+
+    .sidebar-link {
+        @apply block py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white;
+    }
+
+    .sidebar-link.active {
+        @apply bg-gray-800 text-white;
+    }
+
+    /* ================= SCAN PAGE ================= */
+
+
+    .scan-wrapper {
+        min-height: 75vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(180deg, #f5f7fb, #eef2ff);
+    }
+
+    /* ================= SCAN CARD ================= */
+
+    .scan-card {
+        width: 520px;
+        max-width: 92%;
+        background: #fff;
+        padding: 50px 45px;
+        border-radius: 24px;
+        text-align: center;
+
+        position: relative;
+        /* مهم جداً */
+        overflow: hidden;
+
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.10);
+        border: 1px solid #eef0f5;
+
+        transition: all 0.25s ease;
+    }
+
+    .scan-card::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(79, 70, 229, 0.08), transparent 60%);
+        transform: rotate(25deg);
+    }
+
+    .scan-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 40px 90px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ================= TEXT ================= */
+
+    .scan-icon {
+        font-size: 52px;
+        color: #4f46e5;
+        margin-bottom: 10px;
+    }
+
+    .scan-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .scan-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    /* ================= INPUT ================= */
+
+    .scan-input {
+        width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        font-size: 16px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    .scan-input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+    }
+
+    /* ================= RESULT ================= */
+
+    .scan-result {
+        margin-top: 15px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    /* ================= MODAL ================= */
+
+    .popup {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(6px);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .popup-content {
+        background: #fff;
+        padding: 25px;
+        border-radius: 18px;
+        text-align: center;
+        width: 320px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+        animation: pop 0.25s ease;
+    }
+
+    .popup img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px;
+        border: 3px solid #4f46e5;
+    }
+
+    @keyframes pop {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
