@@ -25,7 +25,7 @@
 
                     {{-- QR Code --}}
                     <div class="d-flex justify-content-center mb-3">
-                        {!! QrCode::size(220)->generate($student->student_code) !!}
+                        {!! QrCode::size(220)->generate((string) $student->student_code) !!}
                     </div>
 
                     {{-- معلومات إضافية (مهمة للمدرسة) --}}

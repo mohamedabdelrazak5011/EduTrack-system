@@ -137,7 +137,7 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($student);
 
-        $data = "NAME: {$student->name} | CODE: {$student->student_code}";
+        $data = $student->student_code;
 
         $result = Builder::create()
             ->writer(new PngWriter())

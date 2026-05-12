@@ -37,7 +37,10 @@
                         <label>🎯 الدرجة النهائية</label>
                         <input type="number" name="max_score" class="form-control" value="100">
                     </div>
-                   
+                    <div class="mb-3">
+                        <label class="form-label">📅 تاريخ الإضافة</label>
+                        <input type="date" name="created_at" class="form-control" value="{{ date('Y-m-d') }}">
+                    </div>
 
                     <button class="btn btn-success">
                         💾 حفظ

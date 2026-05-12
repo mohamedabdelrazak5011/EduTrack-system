@@ -22,7 +22,7 @@ Route::resource('students', StudentController::class);
 // Extra student routes
 Route::get('/students/{student}/qr', [StudentController::class, 'qr'])->name('students.qr');
 
-Route::resource('students', StudentController::class);
+
 Route::get('/students/{student}/records', [AttendanceController::class, 'studentRecords'])->name('students.records');
 
 // Attendance

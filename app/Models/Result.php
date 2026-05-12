@@ -40,6 +40,9 @@ class Result extends Model
     /**
      * 📅 تاريخ النتيجة = وقت الإنشاء
      */
-  
+    public function getResultDateAttribute()
+    {
+        return $this->created_at->format('Y-m-d');
+    }
 
 }
